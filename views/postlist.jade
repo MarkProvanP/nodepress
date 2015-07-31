@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  h1 Post list
+  ul
+    each post, i in postlist
+      li
+        h2= post.title
+        p= post.body

@@ -8,6 +8,12 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
+var mongoose = require('mongodb');
+var monk = require('monk');
+
+// Connect to our mongo database
+var db = monk('localhost:27017/nodepress-posts');
+
 var app = express();
 
 // view engine setup
@@ -21,6 +27,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Make our db accessible to our router
+app.use(function(req, res, next) {
+  req.db = db;
+  next();
+})
 
 app.use('/', routes);
 app.use('/users', users);
