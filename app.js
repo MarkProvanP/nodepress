@@ -4,6 +4,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var expstate = require('express-state');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -12,9 +15,10 @@ var mongoose = require('mongodb');
 var monk = require('monk');
 
 // Connect to our mongo database
-var db = monk('localhost:27017/nodepress-posts');
+var db = monk('localhost:27017/nodepress');
 
 var app = express();
+expstate.extend(app);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -27,6 +31,25 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+var users_db = db.users;
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    users_db.findOne({ username: username }, function (err, user) {
+      if (err) return done(err);
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      /*if (!user.validPassword(password)) {
+        return done(null, false, { message 'Incorrect password.' });
+      }*/
+      return done(null, user);
+    })
+  }
+));
 
 // Make our db accessible to our router
 app.use(function(req, res, next) {
@@ -43,6 +66,9 @@ app.use(function(req, res, next) {
   err.status = 404;
   next(err);
 });
+
+app.post('/login', passport.authenticate('local', { successRedirect: '/userlist',
+                                                    failureRedirect: '/userlist'}));
 
 // error handlers
 

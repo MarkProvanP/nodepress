@@ -9,10 +9,21 @@ router.get('/', function(req, res, next) {
 /* GET Postlist page. */
 router.get('/postlist', function(req, res) {
   var db = req.db;
-  var collection = db.get('postcollection');
-  collection.find({}, {}, function(e, docs) {
+  var posts = db.get('posts');
+  posts.find({}, {}, function(e, docs) {
     res.render('postlist', {
       "postlist": docs
+    });
+  });
+});
+
+/* GET Userlist page. */
+router.get('/userlist', function(req, res) {
+  var db = req.db;
+  var users = db.get('users');
+  users.find({}, {}, function(e, docs) {
+    res.render('userlist', {
+      "userlist": docs
     });
   });
 });
@@ -21,6 +32,15 @@ router.get('/postlist', function(req, res) {
 router.get('/newpost', function(req, res) {
   res.render('newpost', { title: 'Add New Post'});
 });
+
+/* Get new user page */
+router.get('/newuser', function(req, res) {
+  res.render('newuser', { title: "Add new user"});
+})
+
+router.get('/login', function(req, res) {
+  res.render('login', { title: "Login" });
+})
 
 /* POST to add post service */
 router.post('/addpost', function(req, res) {
@@ -33,10 +53,10 @@ router.post('/addpost', function(req, res) {
   var postDate = new Date();
 
   // Set our collection
-  var collection = db.get('postcollection');
+  var posts = db.get('posts');
 
   // Submit to the DB
-  collection.insert({
+  posts.insert({
     "title": postTitle,
     "body": postBody,
     "date": postDate
@@ -49,7 +69,31 @@ router.post('/addpost', function(req, res) {
       // And forward to success page
       res.redirect("postlist");
     }
+  });
+});
+
+/* POST to add user service */
+router.post('/adduser', function(req, res) {
+  var db = req.db;
+
+  var username = req.body.username;
+  var email = req.body.email;
+
+  var users = db.get('users');
+
+  users.insert({
+    "username": username,
+    "email": email
+  }, function(err, doc) {
+    if (err) {
+      res.send("There was a porblem adding the user information to the database");
+    }
+    else {
+      res.redirect("userlist");
+    }
   })
 })
+
+
 
 module.exports = router;
